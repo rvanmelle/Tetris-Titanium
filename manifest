@@ -1,0 +1,24 @@
+#appname:Tetris
+#appid:com.reid_van_melle.tetris
+#publisher:Reid van Melle
+#image:photo_of_me.png
+#url:http://www.google.com/profiles/rvanmelle
+#guid:5ec37f33-b927-4969-8e46-57697611d603
+#desc:Tetris is a cool new app created by Reid van Melle
+runtime:0.3
+api:0.3
+tiapp:0.3
+tifilesystem:0.3
+tiplatform:0.3
+tiui:0.3
+javascript:0.3
+tianalytics:0.3
+python:0.3
+ruby:0.3
+tidesktop:0.3
+tigrowl:0.3
+timedia:0.3
+timonkey:0.3
+tinetwork:0.3
+tinotification:0.3
+tiprocess:0.3

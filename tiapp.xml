@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ti:app xmlns:ti='http://ti.appcelerator.org'>
+<id>com.reid_van_melle.tetris</id>
+<name>Tetris</name>
+<version>1.0</version>
+<publisher>Reid van Melle</publisher>
+<url>http://www.google.com/profiles/rvanmelle</url>
+<copyright>2009 by Reid van Melle</copyright>
+<window>
+<id>initial</id>
+<title>Tetris</title>
+<url>app://index.html</url>
+<width>700</width>
+<max-width>3000</max-width>
+<min-width>0</min-width>
+<height>600</height>
+<max-height>3000</max-height>
+<min-height>0</min-height>
+<fullscreen>false</fullscreen>
+<resizable>true</resizable>
+<chrome scrollbars="true">true</chrome>
+<maximizable>true</maximizable>
+<minimizable>true</minimizable>
+<closeable>true</closeable>
+</window>
+</ti:app>

@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>SVG Tetris</title>
+  <style>body{background-color:#101010;color:gray}</style>
+</head>
+
+<body onload="loader()">
+  <div style="float:left; font-size:1.1em; padding:15px">
+    <b>Remember to click on the game board!</b><br/>
+    <span>Move Left: &lt;left arrow&gt;</span><br/>
+    <span>Move Right: &lt;right arrow&gt;</span><br/>
+    <span>Rotate: &lt;up arrow&gt;</span><br/>
+    <span>Move Down: &lt;down arrow&gt;</span><br/>
+  </div>
+  <p>
+    Status: <span id="status"></span> Lines: <span id="lines">0</span>
+    <form>
+      <input onclick="window.SVGstartGame();" type="button" value="Start"/>
+      <input onclick="window.SVGpauseGame();" type="button" value="Pause"/>
+      <input onclick="window.SVGnewGame();" type="button" value="New"/>
+    </form>
+  </p>
+  <embed id="embed" src="board.svg" width="310" height="510" type="image/svg+xml" name="board"></embed>
+
+</body>
+</html>

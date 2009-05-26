@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/SVG/DTD/svg10.dtd">
+<svg onload="loader()" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+  <script type='text/ecmascript'> <![CDATA[
+var GRIDSIZE = 25;
+var BOARDWIDTH = 12;
+var BOARDHEIGHT = 20;
+var GAMEBOARD = {  };
+var GAMECUBES = {  };
+var CURPIECE = {  };
+var TIMER;
+var LINESCOUNT = 0;
+var GAMEOVER;
+var SHAPECOLORS =
+  [ 'orange', 'blue', 'red', 'yellow', 'cyan', 'purple', 'gray' ];
+var TETRISSHAPES =
+  [ [ [ 0, 0, 0, 0, 1, 0, 1, 1, 1 ], [ 1, 0, 0, 1, 1, 0, 1, 0, 0 ],
+      [ 0, 0, 0, 1, 1, 1, 0, 1, 0 ], [ 0, 1, 0, 1, 1, 0, 0, 1, 0 ] ],
+    [ [ 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 ],
+      [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 ] ],
+    [ [ 0, 1, 0, 0, 1, 0, 1, 1, 0 ], [ 0, 0, 0, 1, 0, 0, 1, 1, 1 ],
+      [ 1, 1, 0, 1, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 1, 1, 1, 0, 0, 1 ] ],
+    [ [ 1, 0, 0, 1, 0, 0, 1, 1, 0 ], [ 0, 0, 0, 1, 1, 1, 1, 0, 0 ],
+      [ 1, 1, 0, 0, 1, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 1, 1, 1, 1 ] ],
+    [ [ 1, 1, 1, 1 ], [ 1, 1, 1, 1 ] ],
+    [ [ 0, 1, 0, 1, 1, 0, 1, 0, 0 ], [ 0, 0, 0, 1, 1, 0, 0, 1, 1 ] ],
+    [ [ 1, 0, 0, 1, 1, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 1, 1, 1, 1, 0 ] ] ];
+    
+function makeIndex(row, col) {
+  return row.toString() + ',' + col.toString();
+};
+
+function createElement(name, attrs, data) {
+  el = document.createElementNS('http://www.w3.org/2000/svg', name);
+  for (var attrName in attrs) {
+    el.setAttributeNS(null, attrName, attrs[attrName]);
+  };
+  return el;
+};
+
+function curPiece() {
+  return CURPIECE[0];
+};
+
+function curRotation() {
+  return CURPIECE[1];
+};
+
+function curX() {
+  return CURPIECE[2];
+};
+
+function curY() {
+  return CURPIECE[3];
+};
+
+function numPieces() {
+  return TETRISSHAPES.length;
+};
+
+function shapeLength(piece) {
+  return TETRISSHAPES[piece][0].length;
+};
+
+function shapePositions(piece) {
+  return TETRISSHAPES[piece].length;
+};
+
+function shapeSize(piece) {
+  return Math.sqrt(shapeLength(piece));
+};
+
+function shapeXpos(piece, index, x) {
+  return x + index % shapeSize(piece);
+};
+
+function shapeYpos(piece, index, y) {
+  return y + Math.floor(index / shapeSize(piece));
+};
+
+function removeCurShape() {
+  for (var loc = 0; loc < shapeLength(curPiece()); loc = loc + 1) {
+    if (TETRISSHAPES[curPiece()][curRotation()][loc] == 1) {
+      GAMEBOARD[getShapeKey(curPiece(), loc, curRotation(), curX(), curY())] =
+      0;
+    };
+  };
+};
+
+function canOccupywhat(piece, rotation, xroot, yroot) {
+  for (var loc = 0; loc < shapeLength(piece); loc = loc + 1) {
+    if (TETRISSHAPES[piece][rotation][loc] == 1) {
+      var xpos = shapeXpos(piece, loc, xroot);
+      var ypos = shapeYpos(piece, loc, yroot);
+      if (xpos >= BOARDWIDTH || xpos < 0 || occupiedwhat(ypos, xpos)) {
+        return null;
+      };
+    };
+  };
+  return true;
+};
+
+function getShapeColor(piece) {
+  return SHAPECOLORS[piece];
+};
+
+function addShape(piece, rotation, xroot, yroot) {
+  CURPIECE = [ piece, rotation, xroot, yroot ];
+  for (var loc = 0; loc < shapeLength(piece); loc = loc + 1) {
+    if (TETRISSHAPES[piece][rotation][loc] == 1) {
+      GAMEBOARD[getShapeKey(piece, loc, rotation, xroot, yroot)] =
+      getShapeColor(piece);
+    };
+  };
+};
+
+function getShapeKey(piece, loc, rotation, xroot, yroot) {
+  var xpos = xroot + loc % shapeSize(piece);
+  var ypos = yroot + Math.floor(loc / shapeSize(piece));
+  return makeIndex(ypos, xpos);
+};
+
+function drawCube(row, col, color) {
+  if (GAMECUBES[makeIndex(row, col)] == undefined) {
+    var xpos = GRIDSIZE * col;
+    var ypos = GRIDSIZE * row;
+    newElement =
+    createElement
+    ('use',
+     { x : xpos, 
+       y : ypos, 
+       fill : color });
+    newElement.setAttributeNS
+    ('http://www.w3.org/1999/xlink', 'href', '#block');
+    GAMECUBES[makeIndex(row, col)] = newElement;
+    document.getElementById('board').appendChild(newElement);
+    return newElement;
+  };
+};
+
+function deleteCube(row, col) {
+  if (GAMECUBES[makeIndex(row, col)] != undefined) {
+    document.getElementById('board').removeChild(GAMECUBES[makeIndex(row, col)]);
+    GAMECUBES[makeIndex(row, col)] = undefined;
+  };
+};
+
+function drawBoard() {
+  for (var row = 0; row < BOARDHEIGHT; row = row + 1) {
+    for (var col = 0; col < BOARDWIDTH; col = col + 1) {
+      if (occupiedwhat(row, col)) {
+        drawCube(row, col, getBoardColor(row, col));
+      } else {
+        deleteCube(row, col);
+      };
+    };
+  };
+};
+
+function moveCurShapeDown() {
+  return moveIfPossible(curPiece(), curRotation(), curX(), curY() + 1);
+};
+
+function rotateCurShapeRight() {
+  return moveIfPossible(curPiece(), nextRotation(curPiece(), curRotation()), curX(), curY());
+};
+
+function moveIfPossible(piece, newRotation, newX, newY) {
+  removeCurShape();
+  if (canOccupywhat(piece, newRotation, newX, newY)) {
+    addShape(piece, newRotation, newX, newY);
+    drawBoard();
+    return true;
+  } else {
+    addShape(curPiece(), curRotation(), curX(), curY());
+    return null;
+  };
+};
+
+function moveCurShapeRight() {
+  return moveIfPossible(curPiece(), curRotation(), curX() + 1, curY());
+};
+
+function moveCurShapeLeft() {
+  return moveIfPossible(curPiece(), curRotation(), curX() - 1, curY());
+};
+
+function getBoardColor(row, col) {
+  return GAMEBOARD[makeIndex(row, col)];
+};
+
+function occupiedwhat(row, col) {
+  if (GAMEBOARD[makeIndex(row, col)] == undefined) {
+    return true;
+  };
+  return GAMEBOARD[makeIndex(row, col)] != 0;
+};
+
+function deleteRow(row) {
+  for (var col = 0; col < BOARDWIDTH; col = col + 1) {
+    GAMEBOARD[makeIndex(row, col)] = 0;
+  };
+  for (var i = row - 1; i != 0; i = i - 1) {
+    for (var col = 0; col < BOARDWIDTH; col = col + 1) {
+      GAMEBOARD[makeIndex(i + 1, col)] = GAMEBOARD[makeIndex(i, col)];
+    };
+  };
+};
+
+function rowFullwhat(row) {
+  for (var col = 0; col < BOARDWIDTH; col = col + 1) {
+    if (!occupiedwhat(row, col)) {
+      return null;
+    };
+  };
+  return true;
+};
+
+function nextRotation(piece, curRotation) {
+  return (curRotation + 1) % shapePositions(piece);
+};
+
+function keypress(event) {
+  var code = event.keyCode;
+  if (code == 37 || code == 44 || code == 63234) {
+    moveCurShapeLeft();
+  }
+  else if (code == 38 || code == 46 || code == 63232) {
+    rotateCurShapeRight();
+  }
+  else if (code == 39 || code == 47 || code == 63235) {
+    moveCurShapeRight();
+  }
+  else if (code == 40 || code == 32 || code == 63233) {
+    moveCurShapeDown();
+  }
+  else if (code == 115) {
+    startGame();
+  }
+  else {
+    alert('key=' + code);
+  };
+  event.stopPropagation();
+};
+
+function eventLoop() {
+  if (!gameOverwhat()) {
+    if (!moveCurShapeDown()) {
+      for (var row = 0; row < BOARDHEIGHT; row = row + 1) {
+        if (rowFullwhat(row)) {
+          ++LINESCOUNT;
+          deleteRow(row);
+        };
+      };
+      drawBoard();
+      setLines(LINESCOUNT);
+      if (addNewRandomPiece()) {
+        drawBoard();
+      } else {
+        markGameOverbang();
+      };
+    };
+    var delay = Math.max(100, 1000 - 100 * (LINESCOUNT / 10));
+    TIMER = setTimeout('eventLoop()', delay);
+  };
+};
+
+function addNewRandomPiece() {
+  var newShape = Math.floor(Math.random() * numPieces());
+  if (canOccupywhat(newShape, 0, 4, 0)) {
+    addShape(newShape, 0, 4, 0);
+    return true;
+  } else {
+    return null;
+  };
+};
+
+function markGameOverbang() {
+  pauseGame();
+  setStatus('You LOSE!');
+  GAMEOVER = true;
+};
+function setStatus(status) {
+  top.document.getElementById('status').innerHTML = status;
+};
+function setLines(lines) {
+  top.document.getElementById('lines').innerHTML = lines;
+};
+function gameOverwhat() {
+  return GAMEOVER == true;
+};
+function startGame() {
+  setStatus('Playing');
+  TIMER = setTimeout('eventLoop()', 1000);
+};
+function pauseGame() {
+  setStatus('Paused');
+  clearTimeout(TIMER);
+};
+
+function newGame() {
+  for (var row = 0; row < BOARDHEIGHT; row = row + 1) {
+    for (var col = 0; col < BOARDWIDTH; col = col + 1) {
+      GAMEBOARD[makeIndex(row, col)] = 0;
+      deleteCube(row, col);
+    };
+  };
+  GAMECUBES = {  };
+  LINESCOUNT = 0;
+  GAMEOVER = null;
+  addNewRandomPiece();
+};
+
+function loader(evt) {
+  top.SVGstartGame	= startGame;
+  top.SVGpauseGame	= pauseGame;
+  top.SVGnewGame    = newGame;
+  newGame();
+  document.addEventListener('keypress', keypress, true);
+};
+]]></script>
+  <defs>
+    <g id="block">
+      <rect stroke="GREEN" stroke-width="2" x="0" y="0" width="25" height="25" rx="3" ry="3"></rect>
+    </g>
+  </defs>
+    <rect fill="black" stroke="red" stroke-width="5" x="0" y="0" width="310" height="510"></rect>
+    <g id="board" transform="translate(5 5)"></g>
+</svg>
